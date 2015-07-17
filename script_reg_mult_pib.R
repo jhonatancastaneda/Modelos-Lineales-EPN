@@ -29,7 +29,10 @@ reg1 <- lm(PIB~EE + inv_infla, datarls)
 summary(reg1)
 
 # graficos residuales
+
 u_t <- reg1$residuals
+summary(u_t)
+hist(u_t)
 
 g <- ggplot(data = datarls, aes(x=inv_infla, y=u_t))
 g + geom_point()
@@ -60,7 +63,6 @@ u_t <- reg1$residuals
 
 g <- ggplot(data = datarls, aes(x=ln_infla, y=u_t))
 g + geom_point()
-# var crece con el inverso de Inflacion
 
 g <- ggplot(data = datarls, aes(x=ln_EE, y=u_t))
 g + geom_point()
@@ -78,6 +80,7 @@ y_t <- reg1$fitted.values
 plot(u_t,y_t)
 
 # Puntos singulares
+install.packages("car",dependencies = True)
 library(car)
 outlierTest(reg1) # Bonferonni p-value for most extreme obs
 qqPlot(reg1, main="QQ Plot") #qq plot for studentized resid 
@@ -88,14 +91,63 @@ qqPlot(reg1, main="QQ Plot") #qq plot for studentized resid
 cutoff <- 4/((nrow(datarls)-length(reg1$coefficients)-2)) 
 plot(reg1, which=4, cook.levels=cutoff)
 datarls[14,]
+
+
+
+# puntos influyentes
+# Cook's plot
+# D > 2/k 
+cutoff <- 2/length(reg1$coefficients)
+plot(reg1, which=4, cook.levels=cutoff)
+datarls[14,]
 #plot(reg1)
 
 
+datarls_14 <- datarls[-14,]
 
 
+# problema de varianza no constante
+# calculamos
 
+ln_pib <- log(datarls_14[,"PIB"])
+ln_infla <- log(datarls_14[,"Inflacion"])
+ln_EE <- log(datarls_14[,"EE"])
 
+# Regresion entre PIB y EE + inv_infla
+reg1 <- lm(ln_pib~ln_EE + ln_infla, datarls)
+summary(reg1)
 
+# residuos
+u_t <- reg1$residuals
 
+g <- ggplot(data = datarls_14, aes(x=ln_infla, y=u_t))
+g + geom_point()
 
+g <- ggplot(data = datarls_14, aes(x=ln_EE, y=u_t))
+g + geom_point()
+
+# graf normal
+qqnorm(u_t)
+qqline(u_t)
+# ley no normal
+
+mean(u_t)
+hist(u_t, breaks = 10)
+
+# Pronosticos vs residuos
+y_t <- reg1$fitted.values
+plot(u_t,y_t)
+
+# Puntos singulares
+install.packages("car",dependencies = True)
+library(car)
+outlierTest(reg1) # Bonferonni p-value for most extreme obs
+qqPlot(reg1, main="QQ Plot") #qq plot for studentized resid 
+
+# puntos influyentes
+# Cook's plot
+# D > 4/(n-k-1) 
+cutoff <- 4/((nrow(datarls)-length(reg1$coefficients)-2)) 
+plot(reg1, which=4, cook.levels=cutoff)
+datarls[14,]
 
